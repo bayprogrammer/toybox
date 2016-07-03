@@ -1,0 +1,15 @@
+body {
+    background-color: #A5A5FF;
+}
+
+canvas {
+    background-color: #4242E7;
+}
+
+div#container {
+    /* TODO: dynamically set in JavaScript based on canvas width */
+    width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5.8em;
+}
