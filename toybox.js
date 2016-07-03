@@ -21,24 +21,28 @@ function blit(bitmap, canvas) {
     ctx.putImageData(image_data, 0, 0);
 }
 
-function draw(bitmap, width, height, bytes_per_pixel) {
+function draw(bitmap, width, bytes_per_pixel) {
     // loop over rows
     for (var y = 0; y < bitmap.length; y += width * bytes_per_pixel) {
         var row = y / (width * bytes_per_pixel);
-	console.log(row);
 
+        var green_gradient = 0;
+        var blue_gradient = 0;
+
+        // loop through pixels of current row
         for (var x = 0; x < width * bytes_per_pixel; x += bytes_per_pixel) {
-            if ( row % 2 == 0) {
-                var r = y + x;
-                var g = y + x + 1;
-                var b = y + x + 2;
-                var a = y + x + 3;
+            green_gradient = (x * row) % 256;
+            blue_gradient = x % 256;
 
-                bitmap[r] = 0xA5;
-                bitmap[g] = 0xA5;
-                bitmap[b] = 0xFF;
-                bitmap[a] = 0xFF;
-            }
+            var r = y + x;
+            var g = y + x + 1;
+            var b = y + x + 2;
+            var a = y + x + 3;
+
+            bitmap[r] = 0x00;
+            bitmap[g] = green_gradient;
+            bitmap[b] = blue_gradient;
+            bitmap[a] = 0xFF;
         }
     }
 }
@@ -54,7 +58,7 @@ function main() {
     // 4 bytes per pixel: RR GG BB AA
     var bitmap = new Uint8ClampedArray(width * height * bytes_per_pixel);
 
-    draw(bitmap, width, height, bytes_per_pixel);
+    draw(bitmap, width, bytes_per_pixel);
 
     blit(bitmap, canvas);
 }
