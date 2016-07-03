@@ -21,81 +21,32 @@ function blit(bitmap, canvas) {
     ctx.putImageData(image_data, 0, 0);
 }
 
-function draw_crazy_pattern(bitmap, width, bytes_per_pixel) {
-    // loop over rows
-    for (var y = 0; y < bitmap.length; y += width * bytes_per_pixel) {
-        var row = y / (width * bytes_per_pixel);
+function draw(bitmap, width, height, pixel_bytes, magic_mushroom) {
 
-        var green_gradient = 0;
-        var blue_gradient = 0;
+    // loop over rows
+    for (var y = 0; y < bitmap.length; y += width * pixel_bytes) {
+
+        // figure out what row we're on
+        var row = y / (width * pixel_bytes);
 
         // loop through pixels of current row
-        for (var x = 0; x < width * bytes_per_pixel; x += bytes_per_pixel) {
-            green_gradient = (x * row) % 256;
-            blue_gradient = x % 256;
+        for (var x = 0; x < width * pixel_bytes; x += pixel_bytes) {
 
+            // calculate color channel indices
             var r = y + x;
             var g = y + x + 1;
             var b = y + x + 2;
             var a = y + x + 3;
 
-            bitmap[r] = 0x00;
-            bitmap[g] = green_gradient;
-            bitmap[b] = blue_gradient;
-            bitmap[a] = 0xFF;
-        }
-    }
-}
+            // run our current state through the magic mushroom we received
+            values = magic_mushroom(x, y, row, bitmap.length, width, height,
+                                    pixel_bytes);
 
-
-function draw_cool_skewed_thing(bitmap, width, bytes_per_pixel) {
-    // loop over rows
-    for (var y = 0; y < bitmap.length; y += width * bytes_per_pixel) {
-        var row = y / (width * bytes_per_pixel);
-
-        var green_gradient = 0;
-        var blue_gradient = 0;
-
-        // loop through pixels of current row
-        for (var x = 0; x < width * bytes_per_pixel; x += bytes_per_pixel) {
-            green_gradient = y % x;
-            blue_gradient = x + y % 256;
-
-            var r = y + x;
-            var g = y + x + 1;
-            var b = y + x + 2;
-            var a = y + x + 3;
-
-            bitmap[r] = 0x00;
-            bitmap[g] = green_gradient;
-            bitmap[b] = blue_gradient;
-            bitmap[a] = 0xFF;
-        }
-    }
-}
-
-function draw(bitmap, width, bytes_per_pixel) {
-    // loop over rows
-    for (var y = 0; y < bitmap.length; y += width * bytes_per_pixel) {
-        var row = y / (width * bytes_per_pixel);
-
-        var green_gradient = 0;
-        var blue_gradient = 0;
-
-        // loop through pixels of current row
-        for (var x = 0; x < width * bytes_per_pixel; x += bytes_per_pixel) {
-            green_gradient = y % x;
-            blue_gradient = x + y % 256;
-
-            var r = y + x;
-            var g = y + x + 1;
-            var b = y + x + 2;
-            var a = y + x + 3;
-
-            bitmap[r] = 0x00;
-            bitmap[g] = green_gradient;
-            bitmap[b] = blue_gradient;
-            bitmap[a] = 0xFF;
+            // let's do this!
+            bitmap[r] = values.red;
+            bitmap[g] = values.green;
+            bitmap[b] = values.blue;
+            bitmap[a] = values.alpha;
         }
     }
 }
@@ -103,16 +54,44 @@ function draw(bitmap, width, bytes_per_pixel) {
 function main() {
     var width = 320;
     var height = 200;
-    var bytes_per_pixel = 4;
+    var pixel_bytes = 4;
 
     var canvas = document.getElementById('canvas');
     prepare_canvas(canvas, width, height);
 
-    // 4 bytes per pixel: RR GG BB AA
-    var bitmap = new Uint8ClampedArray(width * height * bytes_per_pixel);
+    // collection of magic mushrooms to feed our bitmap drawing function
+    var mushrooms = [
 
-    draw(bitmap, width, bytes_per_pixel);
+        // crazy pattern
+        function(x, y, row, bitmap_length, width, height, bytes_per_pixel) {
+            var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
+            values.green = (x * row) % 256;
+            values.blue = x % 256;
+            return values;
+        },
 
+        // cool skewed things
+        function(x, y, row, bitmap_length, width, height, bytes_per_pixel) {
+            var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
+            values.green = y % x;
+            values.blue = x + y % 256;
+            return values;
+        },
+
+        // pretty repeating gradient boxes
+        function(x, y, row, bitmap_length, width, height, bytes_per_pixel) {
+            var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
+            values.green = (x | row) % 256;
+            values.blue = x + y % 256;
+            return values;
+        },
+
+    ]
+
+    var bitmap = new Uint8ClampedArray(width * height * pixel_bytes);
+    // TODO: bind event listener for arrow keys and cycle through available
+    //       mushrooms
+    draw(bitmap, width, height, pixel_bytes, mushrooms[2]);
     blit(bitmap, canvas);
 }
 
