@@ -63,7 +63,7 @@ function main() {
     var mushrooms = [
 
         // crazy pattern
-        function(x, y, row, bitmap_length, width, height, bytes_per_pixel) {
+        function(x, y, row, length, width, height, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
             values.green = (x * row) % 256;
             values.blue = x % 256;
@@ -71,7 +71,7 @@ function main() {
         },
 
         // cool skewed things
-        function(x, y, row, bitmap_length, width, height, bytes_per_pixel) {
+        function(x, y, row, length, width, height, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
             values.green = y % x;
             values.blue = x + y % 256;
@@ -79,10 +79,79 @@ function main() {
         },
 
         // pretty repeating gradient boxes
-        function(x, y, row, bitmap_length, width, height, bytes_per_pixel) {
+        function(x, y, row, length, width, height, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
             values.green = (x | row) % 256;
             values.blue = x + y % 256;
+            return values;
+        },
+
+        // multicolored repeating gradient boxes (variation on previous)
+        function(x, y, row, length, width, height, pixel_bytes) {
+            var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
+            values.green = (x | row) % 256;
+            values.blue = (x / 2 | row) % 256;
+            values.red = (x / 4 | row) % 256;
+            return values;
+        },
+
+        // multicolored repeating gradient variation 3
+        function(x, y, row, length, width, height, pixel_bytes) {
+            var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
+            values.green = (x / 4 | row + 1) % 256;
+            values.blue = (x / 4 | row + 10) % 256;
+            values.red = (x / 4 | row + 100) % 256;
+            return values;
+        },
+
+
+        // multicolored repeating gradient variation 4
+        function(x, y, row, length, width, height, pixel_bytes) {
+            var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
+            values.green = (x / pixel_bytes | row) % 256;
+            values.blue = (x / pixel_bytes | row) % 256;
+            values.red = (x / pixel_bytes | row) % 256;
+            return values;
+        },
+
+        // receding noise
+        function(x, y, row, length, width, height, pixel_bytes) {
+            var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
+            values.green = x % row;
+            values.blue = ((x / pixel_bytes) % row) * pixel_bytes
+            values.red = ( (y / x) * (y % x) ) % 256;
+            return values;
+        },
+
+        // bands of blue
+        function(x, y, row, length, width, height, pixel_bytes) {
+            var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
+            values.blue = (y/4 + x/4) % 256;
+            return values;
+        },
+
+        // another skew
+        function(x, y, row, length, width, height, pixel_bytes) {
+            var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
+            values.red = (y / width) % 256;
+            values.green = (y % x) % 256;
+            values.blue = x % 256;
+            return values;
+        },
+
+        // entering orbit of a red giant star
+        function(x, y, row, length, width, height, pixel_bytes) {
+            var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
+            values.red = x / row;
+            return values;
+        },
+
+        // ??
+        function(x, y, row, length, width, height, pixel_bytes) {
+            var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
+            //values.red = (y / height) % 256;
+            values.green = (y / width) % 256;
+            values.blue = x % 256;
             return values;
         },
 
@@ -91,7 +160,7 @@ function main() {
     var bitmap = new Uint8ClampedArray(width * height * pixel_bytes);
     // TODO: bind event listener for arrow keys and cycle through available
     //       mushrooms
-    draw(bitmap, width, height, pixel_bytes, mushrooms[2]);
+    draw(bitmap, width, height, pixel_bytes, mushrooms[10]);
     blit(bitmap, canvas);
 }
 
