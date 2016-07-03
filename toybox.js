@@ -22,12 +22,23 @@ function blit(bitmap, canvas) {
 }
 
 function draw(bitmap, width, height, bytes_per_pixel) {
-    for (var i = 0; i < bitmap.length; i += bytes_per_pixel) {
-        if (i % 8 == 0) {
-            bitmap[i + 0] = 0xA5;  // r
-            bitmap[i + 1] = 0xA5;  // g
-            bitmap[i + 2] = 0xFF;  // b
-            bitmap[i + 3] = 0xFF;  // a
+    // loop over rows
+    for (var y = 0; y < bitmap.length; y += width * bytes_per_pixel) {
+        var row = y / (width * bytes_per_pixel);
+	console.log(row);
+
+        for (var x = 0; x < width * bytes_per_pixel; x += bytes_per_pixel) {
+            if ( row % 2 == 0) {
+                var r = y + x;
+                var g = y + x + 1;
+                var b = y + x + 2;
+                var a = y + x + 3;
+
+                bitmap[r] = 0xA5;
+                bitmap[g] = 0xA5;
+                bitmap[b] = 0xFF;
+                bitmap[a] = 0xFF;
+            }
         }
     }
 }
