@@ -11,7 +11,7 @@ function prepare_canvas(canvas, width, height) {
 }
 
 function blit(bitmap, canvas) {
-    // TODO: any advantage to caching this context in the main function?
+    // TODO: anrow_addr advantage to caching this context in the main function?
     var ctx = canvas.getContext('2d');
 
     //var image_data = ctx.getImageData(0, 0, width, height);
@@ -22,24 +22,28 @@ function blit(bitmap, canvas) {
 }
 
 function draw(bitmap, width, height, pixel_bytes, magic_mushroom) {
+    var stride = width * pixel_bytes;
 
     // loop over rows
-    for (var y = 0; y < bitmap.length; y += width * pixel_bytes) {
+    for (var row_addr = 0; row_addr < bitmap.length; row_addr += stride) {
 
         // figure out what row we're on
-        var row = y / (width * pixel_bytes);
+        var row = row_addr / stride;
 
         // loop through pixels of current row
-        for (var x = 0; x < width * pixel_bytes; x += pixel_bytes) {
+        for (var col_addr = 0; col_addr < stride; col_addr += pixel_bytes) {
+            var col = col_addr / pixel_bytes;
+            var pixel_addr = row_addr + col_addr
 
             // calculate color channel indices
-            var r = y + x;
-            var g = y + x + 1;
-            var b = y + x + 2;
-            var a = y + x + 3;
+            var r = pixel_addr;
+            var g = pixel_addr + 1;
+            var b = pixel_addr + 2;
+            var a = pixel_addr + 3;
 
             // run our current state through the magic mushroom we received
-            values = magic_mushroom(x, y, row, bitmap.length, width, height,
+            values = magic_mushroom(col_addr, row_addr, pixel_addr, col, row,
+                                    bitmap.length, width, height, stride,
                                     pixel_bytes);
 
             // let's do this!
@@ -63,95 +67,104 @@ function main() {
     var mushrooms = [
 
         // crazy pattern
-        function(x, y, row, length, width, height, pixel_bytes) {
+        function(col_addr, row_addr, pixel_addr, col, row, length,
+                 width, height, stride, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
-            values.green = (x * row) % 256;
-            values.blue = x % 256;
+            values.green = (col_addr * row) % 256;
+            values.blue  = col_addr % 256;
             return values;
         },
 
         // cool skewed things
-        function(x, y, row, length, width, height, pixel_bytes) {
+        function(col_addr, row_addr, pixel_addr, col, row, length,
+                 width, height, stride, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
-            values.green = y % x;
-            values.blue = x + y % 256;
+            values.green = row_addr % col_addr;
+            values.blue  = col_addr + row_addr % 256;
             return values;
         },
 
         // pretty repeating gradient boxes
-        function(x, y, row, length, width, height, pixel_bytes) {
+        function(col_addr, row_addr, pixel_addr, col, row, length,
+                 width, height, stride, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
-            values.green = (x | row) % 256;
-            values.blue = x + y % 256;
+            values.green = (col_addr | row) % 256;
+            values.blue  = col_addr + row_addr % 256;
             return values;
         },
 
         // multicolored repeating gradient boxes (variation on previous)
-        function(x, y, row, length, width, height, pixel_bytes) {
+        function(col_addr, row_addr, pixel_addr, col, row, length,
+                 width, height, stride, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
-            values.green = (x | row) % 256;
-            values.blue = (x / 2 | row) % 256;
-            values.red = (x / 4 | row) % 256;
+            values.green = (col_addr | row) % 256;
+            values.blue  = (col_addr / (pixel_bytes / 2) | row) % 256;
+            values.red   = (col_addr / pixel_bytes | row) % 256;
             return values;
         },
 
         // multicolored repeating gradient variation 3
-        function(x, y, row, length, width, height, pixel_bytes) {
+        function(col_addr, row_addr, pixel_addr, col, row, length,
+                 width, height, stride, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
-            values.green = (x / 4 | row + 1) % 256;
-            values.blue = (x / 4 | row + 10) % 256;
-            values.red = (x / 4 | row + 100) % 256;
+            values.green = (col_addr / pixel_bytes | row + 1)   % 256;
+            values.blue  = (col_addr / pixel_bytes | row + 10)  % 256;
+            values.red   = (col_addr / pixel_bytes | row + 100) % 256;
             return values;
         },
 
-
         // multicolored repeating gradient variation 4
-        function(x, y, row, length, width, height, pixel_bytes) {
+        function(col_addr, row_addr, pixel_addr, col, row, length,
+                 width, height, stride, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
-            values.green = (x / pixel_bytes | row) % 256;
-            values.blue = (x / pixel_bytes | row) % 256;
-            values.red = (x / pixel_bytes | row) % 256;
+            values.green = (col_addr / pixel_bytes | row) % 256;
+            values.blue  = (col_addr / pixel_bytes | row) % 256;
+            values.red   = (col_addr / pixel_bytes | row) % 256;
             return values;
         },
 
         // receding noise
-        function(x, y, row, length, width, height, pixel_bytes) {
+        function(col_addr, row_addr, pixel_addr, col, row, length,
+                 width, height, stride, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
-            values.green = x % row;
-            values.blue = ((x / pixel_bytes) % row) * pixel_bytes
-            values.red = ( (y / x) * (y % x) ) % 256;
+            values.green = col_addr % row;
+            values.blue  = ((col_addr / pixel_bytes) % row) * pixel_bytes
+            values.red   = ((row_addr / col_addr) * (row_addr % col_addr)) % 256;
             return values;
         },
 
         // bands of blue
-        function(x, y, row, length, width, height, pixel_bytes) {
+        function(col_addr, row_addr, pixel_addr, col, row, length,
+                 width, height, stride, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
-            values.blue = (y/4 + x/4) % 256;
+            values.blue = (row_addr / pixel_bytes + col_addr/4) % 256;
             return values;
         },
 
         // another skew
-        function(x, y, row, length, width, height, pixel_bytes) {
+        function(col_addr, row_addr, pixel_addr, col, row, length,
+                 width, height, stride, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
-            values.red = (y / width) % 256;
-            values.green = (y % x) % 256;
-            values.blue = x % 256;
+            values.red   = (row_addr / width) % 256;
+            values.green = (row_addr % col_addr) % 256;
+            values.blue  = col_addr % 256;
             return values;
         },
 
         // entering orbit of a red giant star
-        function(x, y, row, length, width, height, pixel_bytes) {
+        function(col_addr, row_addr, pixel_addr, col, row, length,
+                 width, height, stride, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
-            values.red = x / row;
+            values.red = col_addr / row;
             return values;
         },
 
-        // ??
-        function(x, y, row, length, width, height, pixel_bytes) {
+        // handmade hero day 4 gradient pattern (ish)
+        function(col_addr, row_addr, pixel_addr, col, row, length,
+                 width, height, stride, pixel_bytes) {
             var values = {red: 0x00, green: 0x00, blue: 0x00, alpha: 0xFF }
-            //values.red = (y / height) % 256;
-            values.green = (y / width) % 256;
-            values.blue = x % 256;
+            values.green = (row_addr / width) % 256;
+            values.blue  = col_addr % 256;
             return values;
         },
 
