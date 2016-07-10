@@ -36,8 +36,7 @@ function draw(bitmap, width, height, pixel_bytes, magic_mushroom) {
             pixel_b = pixel_addr + 2;
             pixel_a = pixel_addr + 3;
 
-            pixel = magic_mushroom(pixel_addr, x,  y, bitmap.length, width,
-                                   height, stride, pixel_bytes);
+            pixel = magic_mushroom(pixel_addr, x,  y, bitmap.length, stride);
 
             bitmap[pixel_r] = pixel.red;
             bitmap[pixel_g] = pixel.green;
@@ -62,7 +61,7 @@ function main() {
     var mushrooms = [
 
         // 0: crazy pattern
-        (pixel_addr, x, y, length, width, height, stride, pixel_bytes) => {
+        (pixel_addr, x, y, length, stride) => {
             return {
                 red:   0x00,
                 green: ((x * pixel_bytes) * y) & 0xFF,
@@ -72,7 +71,7 @@ function main() {
         },
 
         // 1: cool skewed things
-        (pixel_addr, x, y, length, width, height, stride, pixel_bytes) => {
+        (pixel_addr, x, y, length, stride) => {
             return {
                 red:   0x00,
                 green: (y * stride) % (x * pixel_bytes),
@@ -82,7 +81,7 @@ function main() {
         },
 
         // 2: pretty repeating gradient boxes
-        (pixel_addr, x, y, length, width, height, stride, pixel_bytes) => {
+        (pixel_addr, x, y, length, stride) => {
             return {
                 red:   0x00,
                 green: ((x * pixel_bytes) | y) & 0xFF,
@@ -92,7 +91,7 @@ function main() {
         },
 
         // 3: multicolored repeating gradient boxes (variation on previous)
-        (pixel_addr, x, y, length, width, height, stride, pixel_bytes) => {
+        (pixel_addr, x, y, length, stride) => {
             return {
                 red:   ((x * pixel_bytes) / pixel_bytes | y) & 0xFF,
                 green: ((x * pixel_bytes) | y) & 0xFF,
@@ -102,7 +101,7 @@ function main() {
         },
 
         // 4: multicolored repeating gradient variation 3
-        (pixel_addr, x, y, length, width, height, stride, pixel_bytes) => {
+        (pixel_addr, x, y, length, stride) => {
             return {
                 red:   ((x * pixel_bytes) / pixel_bytes | y + 100) & 0xFF,
                 green: ((x * pixel_bytes) / pixel_bytes | y + 1)   & 0xFF,
@@ -112,7 +111,7 @@ function main() {
         },
 
         // 5: multicolored repeating gradient variation 4
-        (pixel_addr, x, y, length, width, height, stride, pixel_bytes) => {
+        (pixel_addr, x, y, length, stride) => {
             return {
                 red:   ((x * pixel_bytes) / pixel_bytes | y) & 0xFF,
                 green: ((x * pixel_bytes) / pixel_bytes | y) & 0xFF,
@@ -122,7 +121,7 @@ function main() {
         },
 
         // 6: receding noise
-        (pixel_addr, x, y, length, width, height, stride, pixel_bytes) => {
+        (pixel_addr, x, y, length, stride) => {
             return {
                 red: (x * pixel_bytes) % y,
                 green:  (((x * pixel_bytes) / pixel_bytes) % y) * pixel_bytes,
@@ -132,7 +131,7 @@ function main() {
         },
 
         // 7: bands of blue
-        (pixel_addr, x, y, length, width, height, stride, pixel_bytes) => {
+        (pixel_addr, x, y, length, stride) => {
             return {
                 red:   0x00,
                 green: 0x00,
@@ -142,7 +141,7 @@ function main() {
         },
 
         // 8: another skew
-        (pixel_addr, x, y, length, width, height, stride, pixel_bytes) => {
+        (pixel_addr, x, y, length, stride) => {
             return {
                 //red:   ((y * stride) / width) & 0xFF,
                 red :  0x00,
@@ -153,7 +152,7 @@ function main() {
         },
 
         // 9: entering orbit of a red giant star
-        (pixel_addr, x, y, length, width, height, stride, pixel_bytes) => {
+        (pixel_addr, x, y, length, stride) => {
             return {
                 red:   ((x + 1) * pixel_bytes) / y,
                 green: 0x00,
@@ -163,7 +162,7 @@ function main() {
         },
 
         // 10: handmade hero day 4 gradient pattern (ish)
-        (pixel_addr, x, y, length, width, height, stride, pixel_bytes) => {
+        (pixel_addr, x, y, length, stride) => {
             return {
                 red:   0x00,
                 green: ((y * stride) / width) & 0xFF,
@@ -172,12 +171,14 @@ function main() {
             };
         },
 
-        // 11: handmade hero day 4 gradient pattern (2nd try)
-        (pixel_addr, x, y, length, width, height, stride, pixel_bytes) => {
+        // 11: handmade hero day 4 gradient pattern (2nd try, more like
+        // muratori's -- scaling based on constant to make up for smaller
+        // canvas used here)
+        (pixel_addr, x, y, length, stride) => {
             return {
                 red:   0x00,
-                green: (y * pixel_bytes) & 0xFF,
-                blue:  pixel_addr & 0xFF,
+                green: (x * 4) & 0xFF,
+                blue:  (y * 4) & 0xFF,
                 alpha: 0xFF
             };
         },
@@ -187,7 +188,7 @@ function main() {
     var bitmap = new Uint8ClampedArray(width * height * pixel_bytes);
     // TODO: bind event listener for arrow keys and cycle through available
     //       mushrooms
-    draw(bitmap, width, height, pixel_bytes, mushrooms[0]);
+    draw(bitmap, width, height, pixel_bytes, mushrooms[11]);
     blit(bitmap, canvas);
 }
 
