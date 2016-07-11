@@ -209,6 +209,36 @@ function main() {
                 alpha: 0xFF
             };
         },
+        
+        // 15: Gone to Plaid by Stephan
+        (pixel_addr, x, y, offset_x, offset_y, length, stride) => {
+            return {
+                red:   (Math.sin(x) + 1) / 2 * 255 + offset_x & 0xFF,
+                green: (Math.cos(y) + 1) / 2 * 255 + offset_y & 0xFF,
+                blue:  (Math.cos(y) + 1) / 2 * 255 - offset_y & 0xFF,
+                alpha: 0xFF
+            };
+        },     
+        
+        // 16: Dizzy Still by Stephan
+        (pixel_addr, x, y, offset_x, offset_y, length, stride) => {
+            return {
+                red: Math.sqrt(Math.pow(100 - y, 2) + Math.pow(100 - x, 2)) & 0xFF,
+                green: Math.sqrt(Math.pow(150 - y, 2) + Math.pow(150 - x, 2)) & 0xFF,
+                blue: 0x80,
+                alpha: 0xFF
+            };
+        },
+        
+        // 17: Dizzy 2 by Stephan
+        (pixel_addr, x, y, offset_x, offset_y, length, stride) => {
+            return {
+                red:   Math.sqrt(Math.pow(Math.cos(offset_x)*50 + height/2 - y, 2) + Math.pow(Math.sin(offset_x)*50 + width/2 - x, 2)) & 0xFF,
+                green: Math.sqrt(Math.pow(Math.cos(offset_x) + height/2 - y, 2) + Math.pow(Math.sin(offset_x) + width/2 - x, 2)) & 0xFF,
+                blue:  0x80,
+                alpha: 0xFF
+            };
+        },           
 
     ]
 
@@ -221,7 +251,7 @@ function main() {
 
     var loop = (timestamp) => {
         if (true) {
-            draw(bitmap, width, height, pixel_bytes, offset_x, offset_y, mushrooms[12]);
+            draw(bitmap, width, height, pixel_bytes, offset_x, offset_y, mushrooms[17]);
             blit(bitmap, canvas);
 
             offset_x = (offset_x +1) & 0xFF;
