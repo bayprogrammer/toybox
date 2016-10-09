@@ -1,16 +1,14 @@
-var mushrooms = require('./toybox/mushrooms');
 var display = require('./toybox/display');
 
 var toybox = {
-    run: function(canvas, width, height, pixel_bytes) {
+    shader_loop: function(canvas, width, height, pixel_bytes, shader) {
         display.prepare_canvas(canvas, width, height);
         var bitmap = new Uint8ClampedArray(width * height * pixel_bytes);
-        var shroom = mushrooms[15];
 
         var loop = (timestamp) => {
             // TODO(zmd): replace bool literal with means to stop loop
             if (true) {
-                display.shade_bitmap(bitmap, width, height, pixel_bytes, shroom);
+                display.shade_bitmap(bitmap, width, height, pixel_bytes, shader);
                 display.blit(bitmap, canvas);
 
                 window.requestAnimationFrame(loop);
