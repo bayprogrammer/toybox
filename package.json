@@ -1,6 +1,6 @@
 {
   "name": "toybox",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "toybox.js",
   "scripts": {
@@ -8,7 +8,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "browserify": "^13.1.0",
     "node-static": "^0.7.9"
