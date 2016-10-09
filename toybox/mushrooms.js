@@ -1,5 +1,22 @@
-// collection of magic mushrooms to feed our bitmap drawing function
+// collection of magic mushrooms (shaders) that can be used with toybox
 var pixel_bytes = 4;
+
+function with_offset(shader) {
+    var offset_x = 0;
+    var offset_y = 0;
+
+    return (pixel_addr, x, y, length, stride) => {
+        var pixel = shader(pixel_addr, x, y, length, stride, offset_x, offset_y);
+
+        // increment offsets after computing the last pixel
+        if (pixel_addr == 0x00) {
+            offset_x = (offset_x + 1) & 0xFF;
+            offset_y = (offset_y + 2) & 0xFF;
+        }
+
+        return pixel;
+    };
+}
 
 var mushrooms = [
 
@@ -128,92 +145,44 @@ var mushrooms = [
     },
 
     // 12: looping green gradient
-    (() => {
-        var offset_x = 0;
-        var offset_y = 0;
-
-        return (pixel_addr, x, y, length, stride) => {
-            var pixel = {
-                red:   0x00,
-                green: ((x + offset_x) * 4) & 0xFF,
-                blue:  ((y + offset_y) * 4) & 0xFF,
-                alpha: 0xFF
-            };
-
-            if (pixel_addr == 0x00) {
-                offset_x = (offset_x +1) & 0xFF;
-                offset_y = (offset_y +2) & 0xFF;
-            }
-
-            return pixel;
+    with_offset((pixel_addr, x, y, length, stride, offset_x, offset_y) => {
+        return {
+            red:   0x00,
+            green: ((x + offset_x) * 4) & 0xFF,
+            blue:  ((y + offset_y) * 4) & 0xFF,
+            alpha: 0xFF
         };
-    })(),
+    }),
 
     // 13: cool skewed things (animated)
-    (() => {
-        var offset_x = 0;
-        var offset_y = 0;
-
-        return (pixel_addr, x, y, length, stride) => {
-            var pixel = {
-                red:   offset_x & offset_y,
-                green: ((offset_x + y) * 400) % ((offset_x + x)),
-                blue:  offset_y,
-                alpha: 0xFF
-            };
-
-            if (pixel_addr == 0x00) {
-                offset_x = (offset_x +1) & 0xFF;
-                offset_y = (offset_y +2) & 0xFF;
-            }
-
-            return pixel;
+    with_offset((pixel_addr, x, y, length, stride, offset_x, offset_y) => {
+        return {
+            red:   offset_x & offset_y,
+            green: ((offset_x + y) * 400) % ((offset_x + x)),
+            blue:  offset_y,
+            alpha: 0xFF
         };
-    })(),
+    }),
 
-    // 14:
-    (() => {
-        var offset_x = 0;
-        var offset_y = 0;
-
-        return (pixel_addr, x, y, length, stride) => {
-            var pixel = {
-                red:   0x00,
-                green: (x * 4) % offset_y & 0xFF,
-                blue:  ((offset_x + y) * 4) & 0xFF,
-                alpha: 0xFF
-            };
-
-            if (pixel_addr == 0x00) {
-                offset_x = (offset_x +1) & 0xFF;
-                offset_y = (offset_y +2) & 0xFF;
-            }
-
-            return pixel;
+    // 14: looping accordion gradient!
+    with_offset((pixel_addr, x, y, length, stride, offset_x, offset_y) => {
+        return {
+            red:   0x00,
+            green: (x * 4) % offset_y & 0xFF,
+            blue:  ((offset_x + y) * 4) & 0xFF,
+            alpha: 0xFF
         };
-    })(),
+    }),
 
     // 15: Gone to Plaid by Stephan
-    (() => {
-        var offset_x = 0;
-        var offset_y = 0;
-
-        return (pixel_addr, x, y, length, stride) => {
-            var pixel = {
-                red:   (Math.sin(x) + 1) / 2 * 255 + offset_x & 0xFF,
-                green: (Math.cos(y) + 1) / 2 * 255 + offset_y & 0xFF,
-                blue:  (Math.cos(y) + 1) / 2 * 255 - offset_y & 0xFF,
-                alpha: 0xFF
-            };
-
-            if (pixel_addr == 0x00) {
-                offset_x = (offset_x +1) & 0xFF;
-                offset_y = (offset_y +2) & 0xFF;
-            }
-
-            return pixel;
+    with_offset((pixel_addr, x, y, length, stride, offset_x, offset_y) => {
+        return {
+            red:   (Math.sin(x) + 1) / 2 * 255 + offset_x & 0xFF,
+            green: (Math.cos(y) + 1) / 2 * 255 + offset_y & 0xFF,
+            blue:  (Math.cos(y) + 1) / 2 * 255 - offset_y & 0xFF,
+            alpha: 0xFF
         };
-    })(),
+    }),
 
     // 16: Dizzy Still by Stephan
     (pixel_addr, x, y, length, stride) => {
@@ -226,30 +195,17 @@ var mushrooms = [
     },
 
     // 17: Dizzy 2 by Stephan
-    (() => {
-        var offset_x = 0;
-        var offset_y = 0;
+    with_offset((pixel_addr, x, y, length, stride, offset_x, offset_y) => {
+        var height = length / stride;
+        var width = stride / 4;
 
-        return (pixel_addr, x, y, length, stride) => {
-            var height = length / stride;
-            var width = stride / 4;
-
-            var pixel = {
-                red:   Math.sqrt(Math.pow(Math.cos(offset_x)*50 + height/2 - y, 2) + Math.pow(Math.sin(offset_x)*50 + width/2 - x, 2)) & 0xFF,
-                green: Math.sqrt(Math.pow(Math.cos(offset_x) + height/2 - y, 2) + Math.pow(Math.sin(offset_x) + width/2 - x, 2)) & 0xFF,
-                blue:  0x80,
-                alpha: 0xFF
-            };
-
-            if (pixel_addr == 0x00) {
-                console.log('incrementing offsets');
-                offset_x = (offset_x +1) & 0xFF;
-                offset_y = (offset_y +2) & 0xFF;
-            }
-
-            return pixel;
+        return {
+            red:   Math.sqrt(Math.pow(Math.cos(offset_x)*50 + height/2 - y, 2) + Math.pow(Math.sin(offset_x)*50 + width/2 - x, 2)) & 0xFF,
+            green: Math.sqrt(Math.pow(Math.cos(offset_x) + height/2 - y, 2) + Math.pow(Math.sin(offset_x) + width/2 - x, 2)) & 0xFF,
+            blue:  0x80,
+            alpha: 0xFF
         };
-    })(),
+    }),
 
 ];
 
