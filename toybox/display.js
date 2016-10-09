@@ -23,7 +23,11 @@ var display = {
         ctx.putImageData(image_data, 0, 0);
     },
 
-    draw: function (bitmap, width, height, pixel_bytes, offset_x, offset_y, mushroom) {
+    shade_pixel: function() {
+        // TODO(zmd)
+    },
+
+    shade_bitmap: function (bitmap, width, height, pixel_bytes, shader) {
         var stride = width * pixel_bytes;
         var pixel_addr = 0x00;
 
@@ -38,7 +42,7 @@ var display = {
                 pixel_b = pixel_addr + 2;
                 pixel_a = pixel_addr + 3;
 
-                pixel = mushroom(pixel_addr, x,  y, offset_x, offset_y, bitmap.length, stride);
+                pixel = shader(pixel_addr, x,  y, bitmap.length, stride);
 
                 bitmap[pixel_r] = pixel.red;
                 bitmap[pixel_g] = pixel.green;
