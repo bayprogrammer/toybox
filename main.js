@@ -1,10 +1,10 @@
 var toybox = require('./toybox');
 var mushrooms = require('./toybox/mushrooms');
+var Display = require('./toybox/display');
 
-var width = 320;
-var height = 200;
-var pixel_bytes = 4;
 var canvas = document.getElementById('canvas');
-var shroom = mushrooms[15];
+var display = new Display(canvas, 320, 200);
+console.log(display);
 
-toybox.shader_loop(canvas, width, height, pixel_bytes, shroom);
+//toybox.shader_loop(display, mushrooms[12]);
+toybox.apply_shader(display, mushrooms[12]);

@@ -1,60 +1,75 @@
-var display = {
+class Display {
 
-    prepare_canvas: function (canvas, width, height) {
+    constructor(canvas, width, height) {
         canvas.width = width;
         canvas.height = height;
-
         canvas.style.imageRendering = '-moz-crisp-edges';
         canvas.style.imageRendering = 'pixelated';
 
         // TODO: calculate canvas scaling relative to window size
         canvas.style.height = height * 4 + 'px';
         canvas.style.width = width * 4 + 'px';
-    },
 
-    blit: function (bitmap, canvas) {
-        // TODO: any advantage to caching this context in the main function?
-        var ctx = canvas.getContext('2d');
+        //this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.width = width;
+        this.height = height;
+        this.stride = width * 4;  // 4 bytes per pixel
+        this.image_data = this.ctx.getImageData(0, 0, width, height)
+        //this.backbuffer = new Uint8ClampedArray(width * height * 4);
+        this.backbuffer = this.image_data.data;
+    }
 
-        //var image_data = ctx.getImageData(0, 0, width, height);
-        //var bitmap = imgdata.data;
+    // TODO(zmd): flush a better name?
+    draw() {
+        // TODO(zmd): is it possible to just directly draw the backbuffer? Or
+        //     do we really have to instantiate a new ImageData every time?
+        //var image = new ImageData(this.backbuffer, this.width, this.height);
+        //this.ctx.putImageData(image, 0, 0);
+        this.ctx.putImageData(this.image_data, 0, 0);
+    }
 
-        var image_data = new ImageData(bitmap, canvas.width, canvas.height)
-        ctx.putImageData(image_data, 0, 0);
-    },
+    // TODO(zmd): are poke and peek really analogious? we're only poking values
+    //     into a back buffer, not directly into the "canvas memory"... think
+    //     upon this
 
-    shade_pixel: function() {
-        // TODO(zmd)
-    },
+    // TODO(zmd): peek() ?
 
-    shade_bitmap: function (bitmap, width, height, pixel_bytes, shader) {
-        var stride = width * pixel_bytes;
-        var pixel_addr = 0x00;
+    poke(value, addr) {
+        this.backbuffer[addr] = value;
+    }
 
-        for (var y = 0; y < height; ++y) {
+    poke_pixel(pixel, pixel_addr) {
+        this.poke(pixel.red,   pixel_addr    );
+        this.poke(pixel.green, pixel_addr + 1);
+        this.poke(pixel.blue,  pixel_addr + 2);
+        this.poke(pixel.alpha, pixel_addr + 3);
+    }
+
+    apply_shader(shader) {
+        // TODO(zmd): generator or function to process each row and here just
+        //     consume the current positions being yeilded? (research)
+        for (var y = 0; y < this.height; ++y) {
+            var pixel_addr = 0x00;
 
             // Set address to beginning of current row
-            pixel_addr = y * stride;
+            pixel_addr = y * this.stride;
 
-            for (var x = 0; x < width; ++x) {
-                pixel_r = pixel_addr;
-                pixel_g = pixel_addr + 1;
-                pixel_b = pixel_addr + 2;
-                pixel_a = pixel_addr + 3;
-
-                pixel = shader(pixel_addr, x,  y, bitmap.length, stride);
-
-                bitmap[pixel_r] = pixel.red;
-                bitmap[pixel_g] = pixel.green;
-                bitmap[pixel_b] = pixel.blue;
-                bitmap[pixel_a] = pixel.alpha;
+            for (var x = 0; x < this.width; ++x) {
+                // TODO(zmd): shader should receive current pixel value, or
+                //     perhaps the whole backbuffer, so it can calculate things in
+                //     terms of existing backbuffer data
+                this.poke_pixel(
+                    shader(pixel_addr, x,  y, this.backbuffer.length, this.stride),
+                    pixel_addr
+                );
 
                 // Move address to next pixel of current row
-                pixel_addr += pixel_bytes;
+                pixel_addr += 4;
             }
         }
     }
 
-};
+}
 
-module.exports = display;
+module.exports = Display;
