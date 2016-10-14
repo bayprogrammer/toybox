@@ -6,37 +6,60 @@ class Display {
         canvas.style.imageRendering = '-moz-crisp-edges';
         canvas.style.imageRendering = 'pixelated';
 
-        // TODO: calculate canvas scaling relative to window size
+        // TODO(zmd): calculate canvas scaling relative to window size
         canvas.style.height = height * 4 + 'px';
         canvas.style.width = width * 4 + 'px';
 
-        //this.canvas = canvas;
+        // TODO(zmd): handle display border and border color inside display?
+
+        this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.width = width;
         this.height = height;
         this.stride = width * 4;  // 4 bytes per pixel
         this.image_data = this.ctx.getImageData(0, 0, width, height)
-        //this.backbuffer = new Uint8ClampedArray(width * height * 4);
         this.backbuffer = this.image_data.data;
+        this.infinite_loop = false;
+
+        // TODO(zmd): use window.setTimeout to ask for frames less frequently
+        //     and only when they're needed
+        window.requestAnimationFrame(() => { this.display_loop() });
     }
 
-    // TODO(zmd): flush a better name?
-    draw() {
-        // TODO(zmd): is it possible to just directly draw the backbuffer? Or
-        //     do we really have to instantiate a new ImageData every time?
-        //var image = new ImageData(this.backbuffer, this.width, this.height);
-        //this.ctx.putImageData(image, 0, 0);
+    display_loop(timestamp) {
+        // TODO(zmd): mechanism to flush only when backbuffer "dirty"
+        //     if this.flush(); { window.requestAnimation... }
+
+        this.flush();
+
+        if (this.infinite_loop) {
+            // TODO(zmd): shall we pass any args back to the infinite loop?
+            this.infinite_loop();
+        }
+
+        window.requestAnimationFrame(() => { this.display_loop() });
+    }
+
+    // TODO(zmd): allow registering multiple loops, rather than just one
+    loop(callback) {
+        this.infinite_loop = callback;
+    }
+
+    // TODO(zmd): clear_loop() { }
+
+    flush() {
+        // TODO(zmd): only put the backbuffer if it is dirty
         this.ctx.putImageData(this.image_data, 0, 0);
+        // TODO(zmd): mark buffer as clean
+        // TODO(zmd): make flush() return bool based on if it had anything TO flush
     }
 
-    // TODO(zmd): are poke and peek really analogious? we're only poking values
-    //     into a back buffer, not directly into the "canvas memory"... think
-    //     upon this
-
-    // TODO(zmd): peek() ?
+    // TODO(zmd): peek()
 
     poke(value, addr) {
+        // TODO(zmd): allow poking iterable or array?
         this.backbuffer[addr] = value;
+        // TODO(zmd): mark buffer as dirty
     }
 
     poke_pixel(pixel, pixel_addr) {
