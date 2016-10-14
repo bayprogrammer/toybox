@@ -19,25 +19,28 @@ class Display {
         this.stride = width * 4;  // 4 bytes per pixel
         this.image_data = this.ctx.getImageData(0, 0, width, height)
         this.backbuffer = this.image_data.data;
+        this.backbuffer_dirty = false;
         this.infinite_loop = false;
 
         // TODO(zmd): use window.setTimeout to ask for frames less frequently
         //     and only when they're needed
-        window.requestAnimationFrame(() => { this.display_loop() });
+        window.setTimeout(() => { this.main_loop() }, 33);
     }
 
-    display_loop(timestamp) {
+    main_loop(timestamp) {
         // TODO(zmd): mechanism to flush only when backbuffer "dirty"
         //     if this.flush(); { window.requestAnimation... }
 
-        this.flush();
+        if (this.backbuffer_dirty) {
+            window.requestAnimationFrame(() => { this.flush() });
+        }
 
         if (this.infinite_loop) {
             // TODO(zmd): shall we pass any args back to the infinite loop?
             this.infinite_loop();
         }
 
-        window.requestAnimationFrame(() => { this.display_loop() });
+        window.setTimeout(() => { this.main_loop() }, 33);
     }
 
     // TODO(zmd): allow registering multiple loops, rather than just one
@@ -48,10 +51,8 @@ class Display {
     // TODO(zmd): clear_loop() { }
 
     flush() {
-        // TODO(zmd): only put the backbuffer if it is dirty
         this.ctx.putImageData(this.image_data, 0, 0);
-        // TODO(zmd): mark buffer as clean
-        // TODO(zmd): make flush() return bool based on if it had anything TO flush
+        this.backbuffer_dirty = false;
     }
 
     // TODO(zmd): peek()
@@ -59,7 +60,7 @@ class Display {
     poke(value, addr) {
         // TODO(zmd): allow poking iterable or array?
         this.backbuffer[addr] = value;
-        // TODO(zmd): mark buffer as dirty
+        this.backbuffer_dirty = true;
     }
 
     poke_pixel(pixel, pixel_addr) {

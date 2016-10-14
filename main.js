@@ -8,7 +8,8 @@ var display = new Display(canvas, 320, 200);
 var box = new ToyBox();
 
 window.display = display
+window.mushrooms = mushrooms
 
 display.loop(() => {
-    display.apply_shader(mushrooms[12]);
+    display.apply_shader(mushrooms[15]);
 });
