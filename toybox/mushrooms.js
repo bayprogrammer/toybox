@@ -10,9 +10,11 @@ function with_offset(shader) {
 
         // increment offsets after computing the last pixel
         if (pixel_addr == 0x00) {
-            offset_x = (offset_x + 1) & 0xFF;
-            offset_y = (offset_y + 2) & 0xFF;
+            offset_x = (offset_x + 4) & 0xFF;
+            offset_y = (offset_y + 8) & 0xFF;
         }
+
+        //for (var i = 0; i < 10; i++) {}
 
         return pixel;
     };

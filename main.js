@@ -11,5 +11,5 @@ window.display = display
 window.mushrooms = mushrooms
 
 display.loop(() => {
-    display.apply_shader(mushrooms[15]);
+    display.apply_shader(mushrooms[12]);
 });

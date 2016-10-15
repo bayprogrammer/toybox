@@ -21,26 +21,30 @@ class Display {
         this.backbuffer = this.image_data.data;
         this.backbuffer_dirty = false;
         this.infinite_loop = false;
+        this.main_loop_speed = 40;
 
         // TODO(zmd): use window.setTimeout to ask for frames less frequently
         //     and only when they're needed
-        window.setTimeout(() => { this.main_loop() }, 33);
+        window.setTimeout(() => { this.main_loop() }, this.main_loop_speed);
+        window.requestAnimationFrame(() => { this.display_loop() });
     }
 
+    // TODO(zmd): mainloop really belongs inside ToyBox (as does loop,
+    //     infinite_loop); it should make use of Display's facilities
     main_loop(timestamp) {
-        // TODO(zmd): mechanism to flush only when backbuffer "dirty"
-        //     if this.flush(); { window.requestAnimation... }
-
-        if (this.backbuffer_dirty) {
-            window.requestAnimationFrame(() => { this.flush() });
-        }
-
         if (this.infinite_loop) {
             // TODO(zmd): shall we pass any args back to the infinite loop?
             this.infinite_loop();
         }
 
-        window.setTimeout(() => { this.main_loop() }, 33);
+        window.setTimeout(() => { this.main_loop() }, this.main_loop_speed);
+    }
+
+    display_loop() {
+        if (this.backbuffer_dirty) {
+            this.flush();
+        }
+        window.requestAnimationFrame(() => { this.display_loop() });
     }
 
     // TODO(zmd): allow registering multiple loops, rather than just one
@@ -59,15 +63,24 @@ class Display {
 
     poke(value, addr) {
         // TODO(zmd): allow poking iterable or array?
-        this.backbuffer[addr] = value;
+        this.pokeq(value, addr);
         this.backbuffer_dirty = true;
     }
 
+    pokeq(value, addr) {
+        this.backbuffer[addr] = value;
+    }
+
     poke_pixel(pixel, pixel_addr) {
-        this.poke(pixel.red,   pixel_addr    );
-        this.poke(pixel.green, pixel_addr + 1);
-        this.poke(pixel.blue,  pixel_addr + 2);
-        this.poke(pixel.alpha, pixel_addr + 3);
+        this.pokeq(pixel, pixel_addr);
+        this.backbuffer_dirty = true;
+    }
+
+    pokeq_pixel(pixel, pixel_addr) {
+        this.pokeq(pixel.red,   pixel_addr    );
+        this.pokeq(pixel.green, pixel_addr + 1);
+        this.pokeq(pixel.blue,  pixel_addr + 2);
+        this.pokeq(pixel.alpha, pixel_addr + 3);
     }
 
     apply_shader(shader) {
@@ -92,6 +105,9 @@ class Display {
                 pixel_addr += 4;
             }
         }
+
+        // Don't signal a draw until we've filled up the back buffer
+        //this.backbuffer_dirty = true;
     }
 
 }
